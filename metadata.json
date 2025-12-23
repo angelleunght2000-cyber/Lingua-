@@ -1,0 +1,7 @@
+{
+  "name": "LinguaSummarize AI",
+  "description": "An advanced audio-to-text tool supporting English, Cantonese, and Chinese with live recording, file upload, and concise AI-powered bullet-point summaries.",
+  "requestFramePermissions": [
+    "microphone"
+  ]
+}
