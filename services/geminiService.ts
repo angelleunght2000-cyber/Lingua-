@@ -6,28 +6,29 @@ export class GeminiService {
   private ai: GoogleGenAI;
 
   constructor() {
+    // In a real local setup, ensure your bundler (like Vite) 
+    // is configured to inject process.env.API_KEY
     this.ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
   }
 
   async summarizeAudioFile(base64Audio: string, mimeType: string, language: Language): Promise<any> {
-    // Using Pro for higher reasoning and better dialect support
-    const model = 'gemini-3-pro-preview';
+    // Using Flash for simplicity, speed, and free-tier compatibility
+    const model = 'gemini-3-flash-preview';
     const prompt = `
-      You are a world-class audio transcription and analysis expert.
+      You are an expert multilingual transcriber.
       Task:
-      1. Transcribe the audio accurately. 
-         - If language is Cantonese, use Traditional Chinese characters and capture HK/Cantonese idioms.
-         - If language is Chinese (Mandarin), use Simplified Chinese characters.
-         - If language is English, use standard English.
-      2. Identify the type of audio (e.g., Technical Meeting, Casual Interview, Voice Memo, Educational Lecture).
-      3. Create a professional, descriptive title (max 6 words).
-      4. Provide a structured summary in concise bullet points.
-      5. Ensure all output (transcript, title, summary) matches the target language: ${language}.
+      1. Transcribe the audio content accurately.
+         - If Target Language is Cantonese: Use Traditional Chinese characters and HK idioms.
+         - If Target Language is Mandarin/Chinese: Use Simplified Chinese characters.
+         - If Target Language is English: Use standard English.
+      2. Classification: Categorize the audio (e.g. Meeting, Memo, Interview).
+      3. Title: Create a short descriptive title.
+      4. Summary: Provide 5-7 clear bullet points of the key takeaways.
       
+      IMPORTANT: The transcript, title, and summary MUST all be in the specified Target Language: ${language}.
       Return the result in JSON format only.
     `;
 
-    // Create a fresh instance to ensure latest API key usage
     const client = new GoogleGenAI({ apiKey: process.env.API_KEY });
     const response = await client.models.generateContent({
       model,
@@ -59,52 +60,38 @@ export class GeminiService {
       return JSON.parse(response.text);
     } catch (e) {
       console.error("Parse error:", response.text);
-      throw new Error("Failed to parse AI response. The audio might be too short or unclear.");
+      throw new Error("Could not parse AI response. Try a clearer audio clip.");
     }
   }
 
   async translateSummary(summary: string[], targetLanguage: Language): Promise<string[]> {
     const client = new GoogleGenAI({ apiKey: process.env.API_KEY });
     const model = 'gemini-3-flash-preview';
-    const prompt = `Translate the following bullet points into ${targetLanguage}. 
-    Ensure cultural nuances are preserved (e.g., Traditional characters for Cantonese, Simplified for Mandarin).
-    Maintain the bullet point structure exactly.\n\nPoints:\n${summary.join('\n')}`;
+    const prompt = `Translate these summary points into ${targetLanguage}. Use Traditional characters for Cantonese and Simplified for Mandarin. Return JSON.`;
     
     const response = await client.models.generateContent({
       model,
-      contents: prompt,
+      contents: `${prompt}\n\nPoints:\n${JSON.stringify(summary)}`,
       config: {
         responseMimeType: "application/json",
         responseSchema: {
           type: Type.OBJECT,
           properties: {
             translatedPoints: { type: Type.ARRAY, items: { type: Type.STRING } }
-          },
-          required: ["translatedPoints"]
+          }
         }
       }
     });
     
-    try {
-      const data = JSON.parse(response.text);
-      return data.translatedPoints;
-    } catch (e) {
-      return summary; 
-    }
+    return JSON.parse(response.text).translatedPoints || summary;
   }
 
   async analyzeGroup(items: any[], language: Language): Promise<GroupSummary> {
     const client = new GoogleGenAI({ apiKey: process.env.API_KEY });
-    const model = 'gemini-3-pro-preview';
-    const context = items.map(i => `Title: ${i.customName || i.suggestedTitle}\nType: ${i.classification}\nSummary: ${i.summary.join(', ')}`).join('\n\n');
+    const model = 'gemini-3-flash-preview';
+    const context = items.map(i => `Title: ${i.suggestedTitle}\nSummary: ${i.summary.join('. ')}`).join('\n\n');
     
-    const prompt = `
-      Analyze these multiple audio transcript summaries in a workspace group.
-      1. Provide a collective executive summary of the common themes and decisions (bullet points).
-      2. Categorize the files by their classification type for a dashboard view.
-      3. Write a 2-sentence synthesis of the overall workspace theme.
-      Respond in ${language}.
-    `;
+    const prompt = `Synthesize these summaries into a group report in ${language}. Include collective bullet points and a breakdown of topics.`;
 
     const response = await client.models.generateContent({
       model,
@@ -128,24 +115,13 @@ export class GeminiService {
       }
     });
 
-    try {
-      return JSON.parse(response.text);
-    } catch (e) {
-      throw new Error("Group analysis failed.");
-    }
+    return JSON.parse(response.text);
   }
 
   async summarizeLink(url: string, language: Language): Promise<any> {
     const client = new GoogleGenAI({ apiKey: process.env.API_KEY });
-    const model = 'gemini-3-pro-preview';
-    const prompt = `
-      Browse the following link: ${url}.
-      Determine if it is an audio file, video, or article.
-      1. Use Google Search to find transcripts or content descriptions if it's a media page.
-      2. Summarize the core message in ${language}.
-      3. Classify the content and suggest a title.
-      Return JSON.
-    `;
+    const model = 'gemini-3-flash-preview';
+    const prompt = `Find information about this link: ${url}. Summarize it in ${language} with a title and category. Use Google Search to verify details.`;
 
     const response = await client.models.generateContent({
       model,
@@ -156,7 +132,7 @@ export class GeminiService {
         responseSchema: {
           type: Type.OBJECT,
           properties: {
-            transcript: { type: Type.STRING },
+            transcript: { type: Type.STRING, description: "Detailed description or transcript found" },
             classification: { type: Type.STRING },
             suggestedTitle: { type: Type.STRING },
             summary: { type: Type.ARRAY, items: { type: Type.STRING } }
@@ -176,10 +152,11 @@ export class GeminiService {
   ) {
     let fullTranscript = "";
     const client = new GoogleGenAI({ apiKey: process.env.API_KEY });
-    const sessionPromise = client.live.connect({
+    
+    return client.live.connect({
       model: 'gemini-2.5-flash-native-audio-preview-09-2025',
       callbacks: {
-        onopen: () => console.log("Live transcription active"),
+        onopen: () => console.log("Live mode active"),
         onmessage: async (message: LiveServerMessage) => {
           if (message.serverContent?.inputTranscription) {
             fullTranscript += message.serverContent.inputTranscription.text;
@@ -191,17 +168,16 @@ export class GeminiService {
           if (fullTranscript.trim()) {
             this.summarizeText(fullTranscript, language).then(onFinalSummary).catch(onError);
           } else {
-            onError(new Error("No audio detected during live session."));
+            onError(new Error("No voice detected."));
           }
         }
       },
       config: {
         responseModalities: [Modality.AUDIO],
         inputAudioTranscription: {},
-        systemInstruction: `You are a real-time transcriber. Output text accurately in ${language}. For Cantonese, use traditional characters. For Chinese Mandarin, use simplified.`
+        systemInstruction: `Transcribe accurately into ${language}. Use Traditional Chinese for Cantonese.`
       }
     });
-    return sessionPromise;
   }
 
   async summarizeText(text: string, language: Language): Promise<any> {
@@ -209,7 +185,7 @@ export class GeminiService {
     const model = 'gemini-3-flash-preview';
     const response = await client.models.generateContent({
       model,
-      contents: `Perform high-quality summarization on this text in ${language}. Include classification and a title. Text: ${text}`,
+      contents: `Summarize this transcribed text into ${language}: ${text}`,
       config: {
         responseMimeType: "application/json",
         responseSchema: {

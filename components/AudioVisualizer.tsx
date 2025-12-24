@@ -1,4 +1,3 @@
-
 import React, { useEffect, useRef } from 'react';
 
 interface AudioVisualizerProps {
@@ -8,7 +7,8 @@ interface AudioVisualizerProps {
 
 const AudioVisualizer: React.FC<AudioVisualizerProps> = ({ stream, isActive }) => {
   const canvasRef = useRef<HTMLCanvasElement>(null);
-  const animationRef = useRef<number>();
+  // Fix: animationRef was missing an initial value argument for useRef which caused a TypeScript error.
+  const animationRef = useRef<number | undefined>(undefined);
 
   useEffect(() => {
     if (!isActive || !stream || !canvasRef.current) return;
