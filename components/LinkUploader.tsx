@@ -48,9 +48,16 @@ const LinkUploader: React.FC<LinkUploaderProps> = ({ onUrlSubmit, disabled }) =>
         </button>
       </form>
       
-      <p className="text-[10px] text-slate-500 leading-relaxed italic">
-        Supports direct media links (MP3, MP4) and public video pages. AI will browse the link to extract content.
-      </p>
+      <div className="space-y-2">
+        <p className="text-[10px] text-slate-500 leading-relaxed italic">
+          Supports direct media links (MP3, MP4) and public video pages. AI will browse the link to extract content.
+        </p>
+        <div className="px-3 py-2 bg-amber-500/10 border border-amber-500/30 rounded-lg">
+          <p className="text-[10px] text-amber-300 font-medium">
+            🔗 Max: <span className="font-bold">20MB</span> | ⏱️ Duration: Up to <span className="font-bold">9.5 hours</span>
+          </p>
+        </div>
+      </div>
     </div>
   );
 };

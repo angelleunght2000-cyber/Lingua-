@@ -230,6 +230,11 @@ const App: React.FC = () => {
               >
                 {status === 'recording' ? <><Square size={20} fill="currentColor"/> STOP RECORDING</> : <><Mic size={20}/> RECORD LIVE</>}
               </button>
+              <div className="px-3 py-2 bg-purple-500/10 border border-purple-500/30 rounded-lg">
+                <p className="text-[10px] text-purple-300 font-medium text-center">
+                  🎙️ Max Recording: <span className="font-bold">60 minutes</span> per session
+                </p>
+              </div>
             </div>
           </div>
         </section>
@@ -266,6 +271,13 @@ const App: React.FC = () => {
               </div>
               <div className="overflow-y-auto prose prose-invert prose-sm max-w-none flex-grow custom-scrollbar pr-2">
                 {result?.suggestedTitle && <h2 className="text-xl font-bold text-white mb-4">{result.suggestedTitle}</h2>}
+                {result?.artistInfo && result.classification?.toLowerCase().includes('music') && (
+                  <div className="mb-4 px-4 py-2 bg-purple-500/10 border border-purple-500/30 rounded-lg inline-block">
+                    <p className="text-xs font-semibold text-purple-300">
+                      🎵 {result.artistInfo !== 'Unknown - Unknown' ? result.artistInfo : 'Artist & Song: Unknown'}
+                    </p>
+                  </div>
+                )}
                 <p className="text-slate-300 leading-relaxed text-base whitespace-pre-wrap">
                   {liveTranscript || result?.transcript || "Awaiting transcription segments..."}
                 </p>

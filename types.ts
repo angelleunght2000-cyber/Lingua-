@@ -2,7 +2,9 @@
 export enum Language {
   ENGLISH = 'English',
   CANTONESE = 'Cantonese (廣東話)',
-  CHINESE = 'Mandarin/Chinese (中文)'
+  CHINESE = 'Mandarin/Chinese (中文)',
+  GERMAN = 'German (Deutsch)',
+  JAPANESE = 'Japanese (日本語)'
 }
 
 export interface SummaryResult {
@@ -10,6 +12,7 @@ export interface SummaryResult {
   summary: string[];
   classification: string;
   suggestedTitle: string;
+  artistInfo?: string; // Optional: "Artist - Song" or "Unknown - Unknown" for music
 }
 
 export interface GroupSummary {
