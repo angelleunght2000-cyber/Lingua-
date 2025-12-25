@@ -1,0 +1,10 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+body {
+  font-family: 'Inter', 'Noto Sans SC', 'Noto Sans TC', 'Noto Sans JP', sans-serif;
+  background-color: #0f172a;
+  color: #f8fafc;
+}
+
