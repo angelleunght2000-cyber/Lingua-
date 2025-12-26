@@ -245,3 +245,4 @@ For issues or questions:
 **Summary:** The AI now prioritizes **accuracy over completeness**, using "Unknown" when uncertain rather than guessing incorrectly. This results in much higher precision for song/artist identification while maintaining perfect lyric transcription.
 
 
+
